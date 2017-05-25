@@ -6,7 +6,15 @@ class Character {
     if (window.location.pathname == '/kk/a_chara.php') {
       this.parseDocument(document, callback);
     } else {
-      this.fetchCharacter(callback);
+      chrome.storage.local.get(['nickname', 'icons'], (items) => {
+        if (typeof items.nickname === 'undefined' || this.nickname === null) {
+          this.fetchCharacter(callback);
+          return;
+        }
+        this.nickname = items.nickname;
+        this.icons = items.icons;
+        callback(this);
+      });
     }
   }
 
@@ -35,7 +43,9 @@ class Character {
       if (input.value != '') this.icons[i].speaker = input.value;
     });
 
-    callback(this);
+    chrome.storage.local.set({'nickname': this.nickname, 'icons': this.icons}, () => {
+      callback(this);
+    });
   }
 }
 
@@ -49,8 +59,8 @@ class Icon {
 
 class MessagePreview {
   constructor(parentNode, character) {
-    this.iconNo = 0;
-    this.rawText = '';
+    this.iconNo = null;
+    this.rawText = null;
     this.letters = 0;
     this.lettersMax = 400;
     this.placeholder = '(ここにプレビューが表示されます。)';
@@ -61,6 +71,7 @@ class MessagePreview {
     this.previewArea = this.createPreviewArea();
 
     this.addEventListeners();
+    this.initializePreview();
   }
 
   createPreviewArea() {
@@ -74,6 +85,11 @@ class MessagePreview {
     this.textInput.addEventListener('focus', this.startMonitoring.bind(this));
     this.textInput.addEventListener('blur', this.endMonitoring.bind(this));
     this.iconSelect.addEventListener('change', this.getIconNo.bind(this));
+  }
+
+  initializePreview() {
+    this.rawText = this.textInput.value;
+    this.getIconNo();
   }
 
   startMonitoring() {

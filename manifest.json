@@ -2,6 +2,7 @@
   "manifest_version": 2,
   "name": "言の葉の樹の下で メッセージプレビュー",
   "version": "0.1",
+  "permissions": ["storage"],
   
   "description": "メッセージ入力時に結果上の表示をプレビューします。",
   "content_scripts": [
