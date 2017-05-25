@@ -6,6 +6,11 @@ let main = (character) => {
     separator.className = 'CL';
     td.appendChild(separator);
     td.appendChild(messagePreview.previewArea);
+    messagePreview.init();
+
+    let stagingPreview = new StagingPreview(td);
+    td.appendChild(stagingPreview.previewArea);
+    stagingPreview.init();
   });
 };
 

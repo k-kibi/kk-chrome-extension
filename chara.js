@@ -1,4 +1,5 @@
 let main = (character) => {
+  let hasStaging = [0, 1, 11];
   for (let i = 1; i <= 8; i++) {
     let tbody = document.getElementById(`CL5${i}`).firstChild;
     let j, jmax;
@@ -9,26 +10,39 @@ let main = (character) => {
     }
 
     for (j = 0; j <= jmax; j++) {
-      let input = tbody.querySelector(`#se${j}-${i}`);
+      let input = document.getElementById(`se${j}-${i}`);
       let container = input.parentNode.parentNode;
       let messagePreview = new MessagePreview(container, character);
 
       let tr = document.createElement('tr');
       let spacer = document.createElement('td');
-      spacer.setAttribute('colspan', '2');
       tr.appendChild(spacer);
       let td = document.createElement('td');
-      td.setAttribute('colspan', '2');
+      td.setAttribute('colspan', '3');
       td.appendChild(messagePreview.previewArea);
       tr.appendChild(td);
 
-      let referenceNode = container.nextSibling;
-      while (referenceNode) {
-        if (referenceNode.nodeType == 1) break;
-        referenceNode = referenceNode.nextSibling;
+      let rows = hasStaging.includes(j) ? 2 : 1;
+      let rCount = 0;
+      let referenceNode = container;
+      while (rCount < rows) {
+        while (referenceNode = referenceNode.nextSibling) {
+          if (referenceNode.nodeType === 1) break;
+        }
+        rCount++;
       }
 
       tbody.insertBefore(tr, referenceNode);
+      messagePreview.init();
+
+      if (hasStaging.includes(j)) {
+        let input = document.getElementById(`en${j}-${i}`);
+        let container = input.parentNode.parentNode;
+        let stagingPreview = new StagingPreview(container);
+
+        td.appendChild(stagingPreview.previewArea);
+        stagingPreview.init();
+      }
     }
   }
 };

@@ -49,6 +49,7 @@ class Character {
   }
 }
 
+
 class Icon {
   constructor() {
     this.name = null;
@@ -56,6 +57,7 @@ class Icon {
     this.speaker = null;
   }
 }
+
 
 class MessagePreview {
   constructor(parentNode, character) {
@@ -66,12 +68,11 @@ class MessagePreview {
     this.placeholder = '(ここにプレビューが表示されます。)';
     this.timerId = null;
     this.character = character;
-    this.textInput = parentNode.querySelectorAll('input[type="text"]')[0];
+    this.textInput = parentNode.querySelector('input[name^="se"]');
     this.iconSelect = parentNode.querySelector('select');
     this.previewArea = this.createPreviewArea();
 
     this.addEventListeners();
-    this.initializePreview();
   }
 
   createPreviewArea() {
@@ -84,17 +85,18 @@ class MessagePreview {
   addEventListeners() {
     this.textInput.addEventListener('focus', this.startMonitoring.bind(this));
     this.textInput.addEventListener('blur', this.endMonitoring.bind(this));
-    this.iconSelect.addEventListener('change', this.getIconNo.bind(this));
+    this.iconSelect.addEventListener('change', this.monitorIconNo.bind(this));
   }
 
-  initializePreview() {
-    this.rawText = this.textInput.value;
-    this.getIconNo();
+  init() {
+    let text = this.textInput.value;
+    let iconNo = this.getIconNo();
+    this.execute(iconNo, text);
   }
 
   startMonitoring() {
     this.endMonitoring();
-    this.timerId = setInterval(()=> {
+    this.timerId = setInterval(() => {
       this.monitorInput();
     }, 200);
   }
@@ -115,13 +117,16 @@ class MessagePreview {
 
   getIconNo() {
     let numberString = this.iconSelect.value;
-    let iconNo;
     if (numberString === '') {
-      iconNo = 0;
+      return 0;
     } else {
-      iconNo = parseInt(numberString);
+      return parseInt(numberString);
     }
-    if (iconNo != this.iconNo) {
+  }
+
+  monitorIconNo() {
+    let iconNo = this.getIconNo();
+    if (iconNo !== this.iconNo) {
       this.execute(iconNo, this.rawText);
     }
   }
@@ -223,7 +228,7 @@ class MessagePreview {
       this.previewArea.textContent = this.placeholder;
       return;
     }
-    this.toEmpty();
+    Util.toEmpty(this.previewArea);
 
     // 〜または〜
     for (let messages of data) {
@@ -244,28 +249,16 @@ class MessagePreview {
         table.appendChild(tr);
 
         this.previewArea.appendChild(table);
-        this.previewArea.appendChild(this.separator());
+        this.previewArea.appendChild(Util.separator());
       }
       this.previewArea.removeChild(this.previewArea.lastChild);
 
-      this.previewArea.appendChild(this.separator('--- または ---'));
+      this.previewArea.appendChild(Util.separator('--- または ---'));
     }
     this.previewArea.removeChild(this.previewArea.lastChild);
   }
-
-  separator(textNode = null) {
-    let separator = document.createElement('div');
-    separator.className = 'CL';
-    if (textNode !== null) separator.textContent = textNode;
-    return separator;
-  }
-
-  toEmpty() {
-    while (this.previewArea.firstChild) {
-      this.previewArea.removeChild(this.previewArea.firstChild);
-    }
-  }
 }
+
 
 class Message {
   constructor() {
@@ -292,5 +285,93 @@ class Message {
     } else {
       return `${this.speaker}<br>「${this.text}」`;
     }
+  }
+}
+
+
+class StagingPreview {
+  constructor(parentNode) {
+    this.rawUrl = null;
+    this.imageUrlInput = parentNode.querySelector('input[name^="en"]');
+
+    this.previewArea = this.createPreviewArea();
+    this.imageUrlInput.addEventListener('blur', this.monitorInput.bind(this));
+  }
+
+  init() {
+    this.monitorInput();
+  }
+
+  monitorInput() {
+    let url = this.imageUrlInput.value;
+    if (url !== this.rawUrl) {
+      let images = this.convert(url);
+      this.render(images);
+    }
+  }
+
+  convert(source) {
+    let images = [];
+    // 各演出画像の設定はURLを複数設定できます。複数設定する場合は ### で区切ってください。
+    let heightRegExp = /@(\d+)$/, urlRegExp = /^https?:\/\//;
+    for (let str of source.split('###')) {
+      // 演出画像URLのすぐ後に、例えば @300 と付けることで高さ300pxで表示できます。
+      let staging = new Staging();
+      let result = heightRegExp.exec(str);
+      if (result !== null) {
+        let h = parseInt(result[1]);
+        if (0 < h && h <= 600) {
+          staging.height = h;
+        }
+        str = str.replace(heightRegExp, '');
+      }
+      if (!urlRegExp.test(str)) continue;
+      staging.url = str;
+
+      images.push(staging);
+    }
+
+    return images;
+  }
+
+  render(images) {
+    Util.toEmpty(this.previewArea);
+    for (let image of images) {
+      let img = document.createElement('img');
+      img.setAttribute('src', image.url);
+      img.setAttribute('width', '600');
+      img.setAttribute('height', image.height);
+      this.previewArea.appendChild(img);
+      this.previewArea.appendChild(Util.separator('--- または ---'));
+    }
+    if (this.previewArea.lastChild) this.previewArea.removeChild(this.previewArea.lastChild);
+  }
+
+  createPreviewArea() {
+    let element = document.createElement('div');
+    element.className = 'CL';
+    return element;
+  }
+}
+
+class Staging {
+  constructor() {
+    this.url = null;
+    this.height = 200;
+  }
+}
+
+class Util {
+  static toEmpty(dom) {
+    while (dom.firstChild) {
+      dom.removeChild(dom.firstChild);
+    }
+  }
+
+  static separator(textNode = null) {
+    let separator = document.createElement('div');
+    separator.className = 'CL';
+    if (textNode !== null) separator.textContent = textNode;
+    return separator;
   }
 }
