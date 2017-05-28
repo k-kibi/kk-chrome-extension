@@ -1,7 +1,13 @@
 {
   "manifest_version": 2,
-  "name": "言の葉の樹の下で メッセージプレビュー",
+  "name": "言の葉の樹の下で メッセージ拡張",
+  "author": "kibi",
   "version": "0.1",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "permissions": ["storage"],
   
   "description": "メッセージ入力時に結果上の表示をプレビューします。",
