@@ -193,7 +193,7 @@ class MessagePreview {
       let fontRegExp2 = new RegExp(`&lt;${result[1]}&gt;(.*)&lt;/${result[1]}&gt;`);
       let result2 = fontRegExp2.exec(source.substring(pos));
       if (result2 !== null) {
-        source = source.replace(fontRegExp2, this.decorativeTag(result[1], result2[1]));
+        source = source.replace(fontRegExp2, Util.decorativeTag(result[1], result2[1]));
       } else {
         pos += result.index + 1;
       }
@@ -202,25 +202,6 @@ class MessagePreview {
     // <BR> セリフの途中で改行します。
     message.text = source.replace(brRegExp, '<br>');
     return message;
-  }
-
-  decorativeTag(tag, content) {
-    let tagType;
-    switch (tag[0]) {
-      case 'F':
-        tagType = 'b';
-        break;
-      case 'I':
-        tagType = 'i';
-        break;
-      case 'S':
-        tagType = 's';
-        break;
-      case 'U':
-        tagType = 'u';
-        break;
-    }
-    return `<${tagType} class="F${tag[1]}">${content}</${tagType}>`;
   }
 
   render(data) {
@@ -259,6 +240,98 @@ class MessagePreview {
   }
 }
 
+class TalkPreview {
+  constructor(parentNode, character) {
+    this.iconNo = null;
+    this.rawText = null;
+    this.letters = 0;
+    this.lettersMax = 300;
+    this.placeholder = '(ここにプレビューが表示されます。)';
+    this.timerId = null;
+    this.character = character;
+    this.textArea = parentNode.querySelector('textarea[name="mes"]');
+    this.previewArea = this.createPreviewArea();
+
+    this.addEventListeners();
+  }
+
+  addEventListeners() {
+    this.textArea.addEventListener('focus', this.startMonitoring.bind(this);
+    this.textArea.addEventListener('blur', this.endMonitoring.bind(this));
+  }
+
+  createPreviewArea() {
+    let element = document.createElement('div');
+    element.className = 'SE';
+    element.textContent = this.placeholder;
+    return element;
+  }
+
+  startMonitoring() {
+    this.endMonitoring();
+    this.timerId = setInterval(() => {
+      this.monitorInput();
+    }, 200);
+  }
+
+  endMonitoring() {
+    if (this.timerId) {
+      clearInterval(this.timerId);
+      this.timerId = null;
+    }
+  }
+
+  monitorInput() {
+    let text = this.textArea.value;
+    if (text != this.rawText) {
+      this.execute(this.iconNo, text);
+    }
+  }
+
+  execute(iconNo, text) {
+    this.iconNo = iconNo;
+    this.rawText = text;
+    let message = this.buildMessage(text);
+    this.render(message);
+  }
+
+  buildMessage(source) {
+    let message = new Message();
+    let fontRegExp = /&lt;([FISU][1-7])&gt;.*&lt;\/[FISU][1-7]&gt;/;
+
+    // HTMLタグをエスケープ
+    source = source.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // 文字装飾
+    let pos = 0, result;
+    while (result = fontRegExp.exec(source.substring(pos))) {
+      let fontRegExp2 = new RegExp(`&lt;${result[1]}&gt;(.*)&lt;/${result[1]}&gt;`);
+      let result2 = fontRegExp2.exec(source.substring(pos));
+      if (result2 !== null) {
+        source = source.replace(fontRegExp2, Util.decorativeTag(result[1], result2[1]));
+      } else {
+        pos += result.index + 1;
+      }
+    }
+
+    message.text = source.replace('\n', '<br>');
+    return message;
+  }
+
+  render(message) {
+    if (messsage == null) {
+      this.previewArea.textContent = this.placeholder;
+      return;
+    }
+    Util.toEmpty(this.previewArea);
+
+    let div = document.createElement('div');
+    div.className = 'B2';
+    div.innerHTML = message.outputText();
+
+    this.previewArea.appendChild(table);
+  }
+}
 
 class Message {
   constructor() {
@@ -349,7 +422,7 @@ class StagingPreview {
 
   createPreviewArea() {
     let element = document.createElement('div');
-    element.className = 'CL';
+    element.className = 'SY';
     return element;
   }
 }
@@ -373,5 +446,24 @@ class Util {
     separator.className = 'CL';
     if (textNode !== null) separator.textContent = textNode;
     return separator;
+  }
+
+  static decorativeTag(tag, content) {
+    let tagType;
+    switch (tag[0]) {
+      case 'F':
+        tagType = 'b';
+        break;
+      case 'I':
+        tagType = 'i';
+        break;
+      case 'S':
+        tagType = 's';
+        break;
+      case 'U':
+        tagType = 'u';
+        break;
+    }
+    return `<${tagType} class="F${tag[1]}">${content}</${tagType}>`;
   }
 }
