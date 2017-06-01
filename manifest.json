@@ -26,6 +26,11 @@
       "matches": ["http://lisge.com/kk/a_chara.php"],
       "css": [],
       "js": ["lib.js", "chara.js"]
+    },
+    {
+      "matches": ["http://lisge.com/kk/a_talk.php"],
+      "css": [],
+      "js": ["lib.js", "talk.js"]
     }
   ]
 }

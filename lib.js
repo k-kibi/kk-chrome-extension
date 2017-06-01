@@ -242,22 +242,30 @@ class MessagePreview {
 
 class TalkPreview {
   constructor(parentNode, character) {
-    this.iconNo = null;
     this.rawText = null;
+    this.speaker = null;
     this.letters = 0;
     this.lettersMax = 300;
     this.placeholder = '(ここにプレビューが表示されます。)';
     this.timerId = null;
     this.character = character;
     this.textArea = parentNode.querySelector('textarea[name="mes"]');
+    this.speakerInput = parentNode.querySelector('input[name="ai"]');
     this.previewArea = this.createPreviewArea();
 
     this.addEventListeners();
   }
 
+  init() {
+    this.rawText = this.textArea.value;
+    this.speaker = this.speakerInput.value;
+    this.execute();
+  }
+
   addEventListeners() {
-    this.textArea.addEventListener('focus', this.startMonitoring.bind(this);
+    this.textArea.addEventListener('focus', this.startMonitoring.bind(this));
     this.textArea.addEventListener('blur', this.endMonitoring.bind(this));
+    this.speakerInput.addEventListener('change', this.getSpeaker.bind(this));
   }
 
   createPreviewArea() {
@@ -283,19 +291,28 @@ class TalkPreview {
 
   monitorInput() {
     let text = this.textArea.value;
-    if (text != this.rawText) {
-      this.execute(this.iconNo, text);
+    if (text !== this.rawText) {
+      this.rawText = text;
+      this.execute();
     }
   }
 
-  execute(iconNo, text) {
-    this.iconNo = iconNo;
-    this.rawText = text;
-    let message = this.buildMessage(text);
+  getSpeaker() {
+    let speaker = this.speakerInput.value;
+    if (speaker !== this.speaker) {
+      this.speaker = speaker;
+      this.execute();
+    }
+  }
+
+  execute() {
+    let message = this.buildMessage(this.rawText, this.speaker);
     this.render(message);
   }
 
-  buildMessage(source) {
+  buildMessage(source, speaker) {
+    if (source === '') return null;
+
     let message = new Message();
     let fontRegExp = /&lt;([FISU][1-7])&gt;.*&lt;\/[FISU][1-7]&gt;/;
 
@@ -314,12 +331,13 @@ class TalkPreview {
       }
     }
 
+    message.speaker = speaker;
     message.text = source.replace('\n', '<br>');
     return message;
   }
 
   render(message) {
-    if (messsage == null) {
+    if (message === null) {
       this.previewArea.textContent = this.placeholder;
       return;
     }
@@ -329,7 +347,7 @@ class TalkPreview {
     div.className = 'B2';
     div.innerHTML = message.outputText();
 
-    this.previewArea.appendChild(table);
+    this.previewArea.appendChild(div);
   }
 }
 
