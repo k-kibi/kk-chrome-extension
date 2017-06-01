@@ -3,7 +3,7 @@ class Character {
     this.nickname = '';
     this.icons = [];
 
-    if (window.location.pathname == '/kk/a_chara.php') {
+    if (window.location.pathname === '/kk/a_chara.php') {
       this.parseDocument(document, callback);
     } else {
       chrome.storage.local.get(['nickname', 'icons'], (items) => {
@@ -19,28 +19,23 @@ class Character {
   }
 
   fetchCharacter(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', '/kk/a_chara.php');
-    xhr.responseType = 'document';
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState == 4) {
-        this.parseDocument(xhr.responseXML, callback);
-      }
-    };
-    xhr.send();
+    fetch('/kk/a_chara.php', { credentials: 'include' })
+      .then(response => response.text())
+      .then(str => (new window.DOMParser()).parseFromString(str, 'text/html'))
+      .then(doc => this.parseDocument(doc, callback));
   }
 
   parseDocument(doc, callback) {
     this.nickname = doc.querySelector('input[name="ai"]').getAttribute('value');
     doc.querySelectorAll('input[name^="in"]').forEach((input, i) => {
       this.icons.push(new Icon());
-      if (input.value != '') this.icons[i].name = input.value;
+      if (input.value !== '') this.icons[i].name = input.value;
     });
     doc.querySelectorAll('input[name^="icon"]').forEach((input, i) => {
-      if (input.value != '') this.icons[i].url = input.value;
+      if (input.value !== '') this.icons[i].url = input.value;
     });
     doc.querySelectorAll('input[name^="icai"]').forEach((input, i) => {
-      if (input.value != '') this.icons[i].speaker = input.value;
+      if (input.value !== '') this.icons[i].speaker = input.value;
     });
 
     chrome.storage.local.set({'nickname': this.nickname, 'icons': this.icons}, () => {
@@ -139,7 +134,7 @@ class MessagePreview {
   }
 
   convert(source) {
-    if (source == '') return null;
+    if (source === '') return null;
 
     let result = [];
     // ###で区切られた中からランダムに１つだけ発します。
@@ -205,7 +200,7 @@ class MessagePreview {
   }
 
   render(data) {
-    if (data == null) {
+    if (data === null) {
       this.previewArea.textContent = this.placeholder;
       return;
     }
