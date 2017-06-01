@@ -265,7 +265,7 @@ class TalkPreview {
 
   createPreviewArea() {
     let element = document.createElement('div');
-    element.className = 'SE';
+    element.className = 'SY';
     element.textContent = this.placeholder;
     return element;
   }
@@ -340,6 +340,7 @@ class TalkPreview {
 
     let div = document.createElement('div');
     div.className = 'B2';
+    div.style = 'margin-left:62px';
     div.innerHTML = message.outputText();
 
     this.previewArea.appendChild(div);
