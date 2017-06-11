@@ -441,6 +441,92 @@ class StagingPreview {
   }
 }
 
+
+
+class SkillSerifMemo {
+  constructor(parentNode) {
+    this.parentNode = parentNode;
+    this.skillSelect = null;
+    this.serifInput = null;
+    this.iconSelect = null;
+    this.skill = null;
+    this.skills = [];
+  }
+
+  init() {
+    let td = this.parentNode.parentNode.nextSibling.nextSibling.querySelector('td');
+    this.serifInput = td.querySelector('input[name^="se"]');
+    this.iconSelect = td.querySelector('select[name^="ic"]');
+    this.skillSelect = this.parentNode.querySelector('select[name^="ss"]');
+    for (let option of this.skillSelect.querySelectorAll('option')) {
+      this.skills.push(new Skill(parseInt(option.value), option.textContent));
+    }
+    this.skillSelect.addEventListener('change', this.getSkill.bind(this));
+    this.getSkill();
+
+    let div = document.createElement('div');
+    div.appendChild(this.createSaveButton());
+    div.appendChild(this.createLoadButton());
+    td.insertBefore(div, td.firstChild);
+  }
+
+  getSkill() {
+    this.skill = this.skills[this.skillSelect.selectedIndex];
+  }
+
+  createLoadButton() {
+    let button = document.createElement('input');
+    button.setAttribute('type', 'button');
+    button.className = 'BUT';
+    button.value = 'このスキルのセリフをロード';
+    button.addEventListener('click', (event) => {
+      this.loadData(this.skill);
+    });
+    return button;
+  }
+
+  createSaveButton() {
+    let button = document.createElement('input');
+    button.setAttribute('type', 'button');
+    button.className = 'BUT';
+    button.value = 'このスキルのセリフをセーブ';
+    button.addEventListener('click', (event) => {
+      this.saveData(this.skill, this.serifInput.value, this.iconSelect.selectedIndex);
+    });
+    return button;
+  }
+
+  loadData(skill) {
+    let key = `skill_${skill.id}`;
+    chrome.storage.local.get([`${key}_serif`, `${key}_icon`], (data) => {
+      if (typeof data[`${key}_serif`] === 'undefined') {
+        alert('このスキルのセリフは保存されていません。');
+        return;
+      }
+      this.serifInput.value = data[`${key}_serif`];
+      this.iconSelect.selectedIndex = data[`${key}_icon`];
+      this.serifInput.focus();
+    });
+  }
+
+  saveData(skill, serif, iconIndex) {
+    let key = `skill_${skill.id}`;
+    let data = {};
+    data[`${key}_serif`] = serif;
+    data[`${key}_icon`] = iconIndex;
+    chrome.storage.local.set(data, () => {
+      alert(`${skill.name}のセリフをセーブしました。`);
+    });
+  }
+}
+
+class Skill {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+  }
+}
+
 class Staging {
   constructor() {
     this.url = null;

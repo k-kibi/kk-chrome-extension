@@ -9,6 +9,12 @@ let main = (character) => {
     td.appendChild(stagingPreview.previewArea);
     stagingPreview.init();
   });
+
+  for (let select of document.querySelectorAll('select[name^="ss"]')) {
+    let td = select.parentNode;
+    let ssm = new SkillSerifMemo(td);
+    ssm.init();
+  }
 };
 
 new Character(main);
