@@ -448,6 +448,7 @@ class SkillSerifMemo {
     this.parentNode = parentNode;
     this.skillSelect = null;
     this.serifInput = null;
+    this.stagingInput = null;
     this.iconSelect = null;
     this.skill = null;
     this.skills = [];
@@ -456,6 +457,7 @@ class SkillSerifMemo {
   init() {
     let td = this.parentNode.parentNode.nextSibling.nextSibling.querySelector('td');
     this.serifInput = td.querySelector('input[name^="se"]');
+    this.stagingInput = td.querySelector('input[name^="en"]');
     this.iconSelect = td.querySelector('select[name^="ic"]');
     this.skillSelect = this.parentNode.querySelector('select[name^="ss"]');
     for (let option of this.skillSelect.querySelectorAll('option')) {
@@ -491,28 +493,30 @@ class SkillSerifMemo {
     button.className = 'BUT';
     button.value = 'このスキルのセリフをセーブ';
     button.addEventListener('click', (event) => {
-      this.saveData(this.skill, this.serifInput.value, this.iconSelect.selectedIndex);
+      this.saveData(this.skill, this.serifInput.value, this.stagingInput.value, this.iconSelect.selectedIndex);
     });
     return button;
   }
 
   loadData(skill) {
     let key = `skill_${skill.id}`;
-    chrome.storage.local.get([`${key}_serif`, `${key}_icon`], (data) => {
+    chrome.storage.local.get([`${key}_serif`, `${key}_staging`, `${key}_icon`], (data) => {
       if (typeof data[`${key}_serif`] === 'undefined') {
         alert('このスキルのセリフは保存されていません。');
         return;
       }
       this.serifInput.value = data[`${key}_serif`];
+      this.stagingInput.value = data[`${key}_staging`];
       this.iconSelect.selectedIndex = data[`${key}_icon`];
       this.serifInput.focus();
     });
   }
 
-  saveData(skill, serif, iconIndex) {
+  saveData(skill, serif, staging, iconIndex) {
     let key = `skill_${skill.id}`;
     let data = {};
     data[`${key}_serif`] = serif;
+    data[`${key}_staging`] = staging;
     data[`${key}_icon`] = iconIndex;
     chrome.storage.local.set(data, () => {
       alert(`${skill.name}のセリフをセーブしました。`);
@@ -533,6 +537,70 @@ class Staging {
     this.height = 200;
   }
 }
+
+class ClassifySkill {
+  constructor() {
+    this.counter = {};
+  }
+
+  execute() {
+    for (let input of document.querySelectorAll('input[name^="jn_"]')) {
+      let result, index, count, number;
+      switch (input.parentNode.className) {
+        case 'B2':
+      }
+      let tdDesc = input.parentNode.parentNode.querySelectorAll('td')[3];
+      let desc = tdDesc.querySelector('b').textContent;
+      if (tdDesc.className === 'B2') {
+        // active
+        result = /【(.+):SP\d+】/.exec(desc);
+        index = ClassifySkill.activeTiming.indexOf(result[1]);
+        count = this.getCount(result[1]);
+        number = index * 50 + count;
+      } else {
+        // passive
+        result = /【(.+)】/.exec(desc);
+        index = ClassifySkill.passiveTiming.indexOf(result[1]);
+        count = this.getCount(result[1]);
+        number = index * 50 + count + 1000;
+      }
+      if (input.parentNode.className === 'Y2') {
+        // 物語用スキル
+        number += 5000;
+      }
+      input.value = number;
+    }
+
+    document.querySelector('input[type="submit"][name="mode2"]').click();
+  }
+
+  getCount(key) {
+    if (this.counter.hasOwnProperty(key)) {
+      this.counter[key]++;
+    } else {
+      this.counter[key] = 1;
+    }
+    return this.counter[key];
+  }
+}
+
+/** @see http://wikiwiki.jp/ktst/?%A5%B9%A5%AD%A5%EB%BB%C5%CD%CD%BE%DC%BA%D9 */
+ClassifySkill.activeTiming = [
+  '通常時',
+  '自分重傷', '味方重傷', 'PT重傷',
+  '4行動毎', '5行動毎', '9行動毎', '16行動毎', '28行動毎',
+  '味方3人以上', '味方4人以上',
+  '敵3人以上', '敵4人以上',
+  '自分異常状態', '自分強化状態',
+  '味方異常状態', '味方強化状態'
+];
+
+ClassifySkill.passiveTiming = [
+  '戦闘開始時', '戦闘離脱時', 'ターン開始時', '自分行動前',
+  'スキル使用後', 'リンクスキル後', 'HP回復後', '被HP回復後',
+  '通常攻撃後', '攻撃命中後', 'クリティカル後', '被攻撃回避後',
+  '被攻撃命中後', '被クリティカル後', '攻撃回避後'
+];
 
 class Util {
   static toEmpty(dom) {

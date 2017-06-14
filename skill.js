@@ -15,6 +15,16 @@ let main = (character) => {
     let ssm = new SkillSerifMemo(td);
     ssm.init();
   }
+
+  let submitButton = document.querySelector('input[type="submit"][name="mode2"]');
+  let sortButton = document.createElement('input');
+  sortButton.setAttribute('type', 'button');
+  sortButton.className = 'BUT2';
+  sortButton.value = 'スキルをソートして設定を反映する';
+  sortButton.addEventListener('click', () => {
+    (new ClassifySkill()).execute();
+  });
+  submitButton.parentNode.insertBefore(sortButton, submitButton);
 };
 
 new Character(main);
