@@ -539,48 +539,50 @@ class Staging {
 }
 
 class ClassifySkill {
-  constructor() {
-    this.counter = {};
-  }
-
-  execute() {
-    for (let input of document.querySelectorAll('input[name^="jn_"]')) {
-      let result, index, count, number;
-      switch (input.parentNode.className) {
-        case 'B2':
-      }
+  static execute() {
+    let inputs = Array.from(document.querySelectorAll('input[name^="jn_"]')).map(input => {
+      let index, result, sp;
+      let ownership = input.parentNode.className === 'B2' ? 0 : 1;
       let tdDesc = input.parentNode.parentNode.querySelectorAll('td')[3];
+      let type = tdDesc.className === 'B2' ? 0 : 1;
       let desc = tdDesc.querySelector('b').textContent;
-      if (tdDesc.className === 'B2') {
-        // active
-        result = /【(.+):SP\d+】/.exec(desc);
+      if (type === 0) {
+        // active skill
+        result = /【(.+):SP(\d+)】/.exec(desc);
         index = ClassifySkill.activeTiming.indexOf(result[1]);
-        count = this.getCount(result[1]);
-        number = index * 50 + count;
+        sp = parseInt(result[2]);
       } else {
-        // passive
+        // passive skill
         result = /【(.+)】/.exec(desc);
         index = ClassifySkill.passiveTiming.indexOf(result[1]);
-        count = this.getCount(result[1]);
-        number = index * 50 + count + 1000;
+        sp = 0;
       }
-      if (input.parentNode.className === 'Y2') {
-        // 物語用スキル
-        number += 5000;
-      }
-      input.value = number;
-    }
+      let desc2 = tdDesc.childNodes[1].textContent;
+      result = /^(.+?)(\d*?):/.exec(desc2);
+      let target = ClassifySkill.target.indexOf(result[1]);
+      let times = result[2] ? parseInt(result[2]) : 1;
+
+      return { input: input, ownership: ownership, type: type, timing: index, sp: sp, target: target, times: times };
+    });
+    inputs.sort(ClassifySkill.compare).forEach((input, index) => {
+      input.input.value = index;
+    });
 
     document.querySelector('input[type="submit"][name="mode2"]').click();
   }
 
-  getCount(key) {
-    if (this.counter.hasOwnProperty(key)) {
-      this.counter[key]++;
-    } else {
-      this.counter[key] = 1;
-    }
-    return this.counter[key];
+  static compare(a, b) {
+    if (a.ownership !== b.ownership) return a.ownership - b.ownership;
+
+    if (a.type !== b.type) return a.type - b.type;
+
+    if (a.timing !== b.timing) return a.timing - b.timing;
+
+    if (a.type === 0 && a.sp !== b.sp) return a.sp - b.sp;
+
+    if (a.target !== b.target) return a.target - b.target;
+
+    return a.times - b.times;
   }
 }
 
@@ -600,6 +602,14 @@ ClassifySkill.passiveTiming = [
   'スキル使用後', 'リンクスキル後', 'HP回復後', '被HP回復後',
   '通常攻撃後', '攻撃命中後', 'クリティカル後', '被攻撃回避後',
   '被攻撃命中後', '被クリティカル後', '攻撃回避後'
+];
+
+ClassifySkill.target = [
+  '自',
+  '味', '味列', '味貫', '味全', '味傷', '味異', '味強',
+  '敵', '敵列', '敵貫', '敵全', '敵傷', '敵異', '敵強',
+  '敵味', '敵味列', '敵味貫', '敵味全', '敵味傷', '敵味異', '敵味強',
+  '他', '他列', '他貫', '他全', '他傷', '他異', '他強'
 ];
 
 class Util {

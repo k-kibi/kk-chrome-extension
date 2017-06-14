@@ -22,7 +22,7 @@ let main = (character) => {
   sortButton.className = 'BUT2';
   sortButton.value = 'スキルをソートして設定を反映する';
   sortButton.addEventListener('click', () => {
-    (new ClassifySkill()).execute();
+    ClassifySkill.execute();
   });
   submitButton.parentNode.insertBefore(sortButton, submitButton);
 };
