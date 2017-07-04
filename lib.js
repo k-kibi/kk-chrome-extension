@@ -60,6 +60,7 @@ class MessagePreview {
     this.rawText = null;
     this.letters = 0;
     this.lettersMax = 400;
+    this.messageStructure = [];
     this.placeholder = '(ここにプレビューが表示されます。)';
     this.timerId = null;
     this.character = character;
@@ -266,7 +267,13 @@ class TalkPreview {
   createPreviewArea() {
     let element = document.createElement('div');
     element.className = 'SY';
-    element.textContent = this.placeholder;
+
+    this.view = document.createElement('div');
+    this.view.className = 'B2';
+    this.view.style = 'margin-left:62px';
+    this.view.textContent = this.placeholder;
+    element.appendChild(this.view);
+
     return element;
   }
 
@@ -333,17 +340,10 @@ class TalkPreview {
 
   render(message) {
     if (message === null) {
-      this.previewArea.textContent = this.placeholder;
+      this.view.textContent = this.placeholder;
       return;
     }
-    Util.toEmpty(this.previewArea);
-
-    let div = document.createElement('div');
-    div.className = 'B2';
-    div.style = 'margin-left:62px';
-    div.innerHTML = message.outputText();
-
-    this.previewArea.appendChild(div);
+    this.view.innerHTML = message.outputText();
   }
 }
 
@@ -539,11 +539,21 @@ class Staging {
 }
 
 class ClassifySkill {
-  static execute() {
-    let inputs = Array.from(document.querySelectorAll('input[name^="jn_"]')).map(input => {
-      let index, result, sp;
-      let ownership = input.parentNode.className === 'B2' ? 0 : 1;
-      let tdDesc = input.parentNode.parentNode.querySelectorAll('td')[3];
+  static sort() {
+    let table = document.querySelector('table.LST tbody');
+    let trs = Array.from(table.querySelectorAll('tr:not(.LG):not(.B2)')).map((tr, i) => {
+      let index, result, sp, ownership;
+      switch(tr.querySelectorAll('td')[1].className) {
+        case 'B2':
+          ownership = 1;
+          break;
+        case 'Y2':
+          ownership = 2;
+          break;
+        default:
+          ownership = 0;
+      }
+      let tdDesc = tr.querySelectorAll('td')[3];
       let type = tdDesc.className === 'B2' ? 0 : 1;
       let desc = tdDesc.querySelector('b').textContent;
       if (type === 0) {
@@ -562,13 +572,20 @@ class ClassifySkill {
       let target = ClassifySkill.target.indexOf(result[1]);
       let times = result[2] ? parseInt(result[2]) : 1;
 
-      return { input: input, ownership: ownership, type: type, timing: index, sp: sp, target: target, times: times };
-    });
-    inputs.sort(ClassifySkill.compare).forEach((input, index) => {
-      input.input.value = index;
+      return { elm: tr, index: i, ownership: ownership, type: type, timing: index, sp: sp, target: target, times: times };
     });
 
-    document.querySelector('input[type="submit"][name="mode2"]').click();
+    let df = document.createDocumentFragment();
+    let tweets = table.querySelectorAll('tr.LG');
+    trs.sort(ClassifySkill.compare).forEach((tr, index) => {
+      if (tr.ownership !== 0) {
+        tr.elm.querySelector('input[name^="jn_"]').value = index;
+      }
+      df.appendChild(tr.elm);
+      df.appendChild(tweets[tr.index]);
+    });
+
+    table.appendChild(df);
   }
 
   static compare(a, b) {

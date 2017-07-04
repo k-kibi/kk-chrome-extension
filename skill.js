@@ -20,9 +20,9 @@ let main = (character) => {
   let sortButton = document.createElement('input');
   sortButton.setAttribute('type', 'button');
   sortButton.className = 'BUT2';
-  sortButton.value = 'スキルをソートして設定を反映する';
+  sortButton.value = 'スキルをソートする';
   sortButton.addEventListener('click', () => {
-    ClassifySkill.execute();
+    ClassifySkill.sort();
   });
   submitButton.parentNode.insertBefore(sortButton, submitButton);
 };
