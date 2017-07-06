@@ -629,6 +629,79 @@ ClassifySkill.target = [
   '他', '他列', '他貫', '他全', '他傷', '他異', '他強'
 ];
 
+
+
+class SkillDraggable {
+  constructor(table, row, index) {
+    this.table = table.querySelector('tbody');
+    this.row = row;
+    this.index = index;
+
+    this.row.setAttribute('draggable', 'true');
+    this.addEvents();
+  }
+
+  addEvents() {
+    this.row.addEventListener('dragstart', this.handleDragStart.bind(this));
+    this.row.addEventListener('dragenter', this.handleDragEnter.bind(this));
+    this.row.addEventListener('dragover', this.handleDragOver.bind(this));
+    this.row.addEventListener('dragleave', this.handleDragLeave.bind(this));
+    this.row.addEventListener('drop', this.handleDrop.bind(this));
+    this.row.addEventListener('dragend', this.handleDragEnd.bind(this));
+  }
+
+  handleDragStart(event) {
+    this.row.classList.add('dragging');
+
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text', this.index);
+  }
+
+  handleDragEnter(event) {
+    this.row.classList.add('over');
+  }
+
+  handleDragLeave(event) {
+    this.row.classList.remove('over');
+  }
+
+  handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+
+  handleDragEnd(event) {
+    this.row.classList.remove('dragging');
+  }
+
+  handleDrop(event) {
+    event.stopPropagation();
+    this.row.classList.remove('over');
+
+    // スキル並べ替え
+    let draggedIndex = parseInt(event.dataTransfer.getData('text'));
+    if (draggedIndex !== this.index) {
+      let rows = this.table.querySelectorAll('tr[draggable="true"]');
+      let draggedRow = rows[draggedIndex];
+      let serifRow = draggedRow.nextElementSibling;
+
+      this.table.insertBefore(draggedRow, this.row);
+      this.table.insertBefore(serifRow, this.row);
+
+      // 順番設定数を上から順に埋める
+      this.table.querySelectorAll('tr[draggable="true"]').forEach((row, index) => {
+        row.querySelector('input[type="text"]').value = (index + 1) * 10;
+      });
+    }
+
+    event.dataTransfer.clearData('text');
+    return false;
+  }
+}
+
+
+
 class Util {
   static toEmpty(dom) {
     while (dom.firstChild) {

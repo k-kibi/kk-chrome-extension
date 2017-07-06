@@ -1,0 +1,7 @@
+table.TB2 tr.dragging {
+    opacity: 0.4;
+}
+
+table.TB2 tr.over td {
+    padding-top: 2em;
+}
