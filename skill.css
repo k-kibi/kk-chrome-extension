@@ -5,3 +5,7 @@ table.TB2 tr.dragging {
 table.TB2 tr.over td {
     padding-top: 2em;
 }
+
+table.TB2 tr[draggable="true"] {
+    cursor: move;
+}
